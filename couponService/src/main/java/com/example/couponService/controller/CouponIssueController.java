@@ -14,7 +14,7 @@ import java.util.UUID;
 @Controller
 public class CouponIssueController {
 
-
+    //발급 가능한 쿠폰 목록
     @GetMapping("/api/coupons/available")
     public List<AvailableCouponDTO>() {
 
@@ -22,12 +22,19 @@ public class CouponIssueController {
 
     }
 
+    //선착순 쿠폰 발급 요청
     @PostMapping("/api/coupons/{couponId}/issue")
     public String issueCoupon(@PathVariable Long couponId, Model model) {
 
         String jobId = UUID.randomUUID().toString();
 
 
+
+    }
+
+    @PostMapping("/api/coupons/{issuedCouponId}/use")
+    public String useCoupon(@PathVariable Long issuedCouponId, Model model) {
+        String jobId = UUID.randomUUID().toString();
 
     }
 

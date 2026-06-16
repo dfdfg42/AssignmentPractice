@@ -22,6 +22,7 @@ public class CouponIssueQueueService {
         couponIssueQueue.add(couponId);
     }
 
+    //쿠폰을 정기적으로 소모하는 워커
     @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     public void scheduled() {
 
