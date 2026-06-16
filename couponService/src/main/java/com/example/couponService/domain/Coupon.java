@@ -2,10 +2,12 @@ package com.example.couponService.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
 public class Coupon {
 
     @Id
@@ -42,55 +44,36 @@ public class Coupon {
     //발급 종료일
     LocalDateTime endDate;
 
-    public Long getId() {
-        return id;
+    public void incrementIssuedQuantity() {
+        if (issuedQuantity == null) {
+            issuedQuantity = 1;
+        } else {
+            issuedQuantity = issuedQuantity + 1;
+        }
     }
 
-    public String getName() {
-        return name;
+    public int getIssuedQuantityOrZero() {
+        return issuedQuantity == null ? 0 : issuedQuantity;
     }
 
-    public String getDescription() {
-        return description;
+    public boolean isActive() {
+        return status == Status.ACTIVE;
     }
 
-    public CouponType getCouponType() {
-        return couponType;
+    public boolean isWithinIssuePeriod(LocalDateTime now) {
+        if (startDate != null && now.isBefore(startDate)) {
+            return false;
+        }
+        if (endDate != null && now.isAfter(endDate)) {
+            return false;
+        }
+        return true;
     }
 
-    public Status getStatus() {
-        return status;
-    }
-
-    public Integer getDiscountValue() {
-        return discountValue;
-    }
-
-    public Integer getMinOrderAmount() {
-        return minOrderAmount;
-    }
-
-    public Integer getMaxDiscountAmount() {
-        return maxDiscountAmount;
-    }
-
-    public Integer getTotalQuantity() {
-        return totalQuantity;
-    }
-
-    public Integer getIssuedQuantity() {
-        return issuedQuantity;
-    }
-
-    public Integer getValidDays() {
-        return validDays;
-    }
-
-    public LocalDateTime getStartDate() {
-        return startDate;
-    }
-
-    public LocalDateTime getEndDate() {
-        return endDate;
+    public boolean isSoldOut() {
+        if (totalQuantity == null) {
+            return false;
+        }
+        return getIssuedQuantityOrZero() >= totalQuantity;
     }
 }

@@ -14,6 +14,7 @@ import com.example.couponService.repository.IssuedCouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Queue;
@@ -49,8 +50,18 @@ public class CouponIssueQueueService {
             Coupon coupon = couponRepository.findById(couponId)
                     .orElseThrow(() -> new CouponNotFoundException("쿠폰을 찾을 수 없습니다."));
 
-            int remain = coupon.getTotalQuantity() - coupon.getIssuedQuantity();
-            if (remain <= 0) {
+            LocalDateTime now = LocalDateTime.now();
+            if (!coupon.isActive()) {
+                task.getFuture().completeExceptionally(new DuplicateCouponIssueException("사용할 수 없는 쿠폰입니다."));
+                continue;
+            }
+
+            if (!coupon.isWithinIssuePeriod(now)) {
+                task.getFuture().completeExceptionally(new DuplicateCouponIssueException("쿠폰 발급 기간이 아닙니다."));
+                continue;
+            }
+
+            if (coupon.isSoldOut()) {
                 task.getFuture().completeExceptionally(new CouponExhaustedException("쿠폰 재고 소진"));
                 continue;
             }
@@ -61,8 +72,11 @@ public class CouponIssueQueueService {
                 continue;
             }
 
+            coupon.incrementIssuedQuantity();
+            couponRepository.save(coupon);
+
             IssuedCoupon issuedCoupon = issuedCouponRepository.save(
-                    IssuedCoupon.create(coupon, userId, LocalDateTime.now(), coupon.getEndDate())
+                    IssuedCoupon.create(coupon, userId, now, coupon.getEndDate())
             );
 
             task.getFuture().complete(new IssueResult(issuedCoupon));
