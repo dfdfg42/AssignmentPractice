@@ -1,54 +1,75 @@
 package com.example.couponService.Service;
 
 
+import com.example.couponService.Service.dto.IssueResult;
+import com.example.couponService.Service.dto.IssueTask;
+import com.example.couponService.Service.exeption.CouponExhaustedException;
+import com.example.couponService.Service.exeption.CouponNotFoundException;
+import com.example.couponService.Service.exeption.DuplicateCouponIssueException;
 import com.example.couponService.domain.Coupon;
+import com.example.couponService.domain.IssuedCoupon;
+import com.example.couponService.domain.Status;
 import com.example.couponService.repository.CouponRepository;
+import com.example.couponService.repository.IssuedCouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 @RequiredArgsConstructor
+@Service
 public class CouponIssueQueueService {
 
     private final CouponRepository couponRepository;
-    Queue<Long> couponIssueQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentHashMap<Long, Long> couponIssueMap = new ConcurrentHashMap<>();
+    private final IssuedCouponRepository issuedCouponRepository;
 
-    public void couponIssueQueueEnqueue(Long couponId) {
-        couponIssueQueue.add(couponId);
+    Queue<IssueTask> couponIssueQueue = new ConcurrentLinkedQueue<>();
+
+    public CompletableFuture<IssueResult> enqueueIssue(Long couponId, Long userId) {
+        CompletableFuture<IssueResult> future = new CompletableFuture<>();
+        couponIssueQueue.add(new IssueTask(couponId,userId,future));
+        return future;
     }
 
     @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     public void scheduled() {
+        IssueTask task;
 
-        if(couponIssueQueue.isEmpty()) {
-            return;
-        }else{
+        while((task = couponIssueQueue.poll()) != null) {
 
-            while(!couponIssueQueue.isEmpty()) {
+            Long couponId = task.getCouponId();
+            Long userId = task.getUserId();
 
-                Long couponId = couponIssueQueue.poll();
+            Coupon coupon = couponRepository.findById(couponId)
+                    .orElseThrow(() -> new CouponNotFoundException("쿠폰을 찾을 수 없습니다."));
 
-                Long remain = couponRepository.remainCouponQuantity(couponId);
-
-                if(remain > 0) {
-
-                }
-
+            int remain = coupon.getTotalQuantity() - coupon.getIssuedQuantity();
+            if (remain <= 0) {
+                task.getFuture().completeExceptionally(new CouponExhaustedException("쿠폰 재고 소진"));
+                continue;
             }
+
+            boolean duplicate = issuedCouponRepository.existsByCouponIdAndUserId(couponId, userId);
+            if (duplicate) {
+                task.getFuture().completeExceptionally(new DuplicateCouponIssueException("이미 발행된 쿠폰입니다."));
+                continue;
+            }
+
+            IssuedCoupon issuedCoupon = issuedCouponRepository.save(
+                    IssuedCoupon.create(coupon, userId, LocalDateTime.now(), coupon.getEndDate())
+            );
+
+            task.getFuture().complete(new IssueResult(issuedCoupon));
 
         }
 
-
     }
-    //쿠폰 요청이 들어옴
 
-    //발급 받을 수 있으면 큐에 넣기
 
-    //발급안되면 fail 반환
 
 }
