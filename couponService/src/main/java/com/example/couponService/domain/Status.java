@@ -5,7 +5,5 @@ public enum Status {
     INACTIVE,
     EXHAUSTED,
     EXPIRED,
-    ISSUED,
-    USED,
-    CANCELLED
+
 }
