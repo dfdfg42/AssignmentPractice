@@ -11,7 +11,14 @@ class ItemService(
     @Transactional
     fun create(name: String): ItemResponse {
         val item = itemRepository.save(Item(name))
-        searchClient.requestIndex(requireNotNull(item.id))
+
+
+        TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization() {
+            public override fun afterCommit() {
+                searchClient.requestIndex(requireNotNull(item.id))
+            }
+        })
+
         return item.toResponse()
     }
 }

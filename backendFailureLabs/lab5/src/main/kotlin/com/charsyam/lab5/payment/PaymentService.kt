@@ -16,13 +16,17 @@ class PaymentService(
 ) {
     @Transactional
     fun payAll(walletId: Long): PaymentBatchResponse {
+
+
         val balanceSeenBeforeLock = walletRepository.findBalance(walletId)
+            ?: throw NoSuchElementException("Wallet $walletId does not exist")
+
+        val lockedWallet = walletRepository.findByIdForUpdate(walletId)
             ?: throw NoSuchElementException("Wallet $walletId does not exist")
 
         entityManager.clear()
 
-        val lockedWallet = walletRepository.findByIdForUpdate(walletId)
-            ?: throw NoSuchElementException("Wallet $walletId does not exist")
+
         val balanceAfterLock = lockedWallet.balance
 
         val orders = orderRepository.findAllByWalletIdAndStatusOrderById(walletId, OrderStatus.BEFORE_PAYMENT)

@@ -25,3 +25,6 @@ dependencies {
 
 tasks.withType<KotlinCompile> { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
 tasks.withType<Test> { useJUnitPlatform() }
+
+// lab5 소스에 @SpringBootApplication 이 둘(lab5 · minisns 찌꺼기) 있어 bootRun 이 main 을 못 고른다 — lab5 를 명시.
+springBoot { mainClass.set("com.charsyam.lab5.Lab5ApplicationKt") }
