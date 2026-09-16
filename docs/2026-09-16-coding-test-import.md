@@ -33,6 +33,19 @@
 
 원본 문제 문서는 리포에 넣지 않았다. 각 폴더 README의 지문은 구현 코드와 주석에서 요구사항을 역추적해 새로 쓴 것이며, 그 사실을 README 상단에 명시했다.
 
+## 문제별 분리 (같은 날 2차)
+
+사용자 요청으로 `backendCodingTest/`를 단일 Spring Boot 프로젝트에서 문제별 독립 프로젝트 4개로 나눴다. 소스는 `git mv`로 옮겨 로직 변경 없음.
+
+| 폴더 | 형태 | 추가한 파일 |
+|---|---|---|
+| problem1CardHands | 순수 Java (`application` 플러그인, `run`이 stdin 사용, `JavaCompile` 인코딩 UTF-8 명시. Windows 기본 CP949에서 한글 주석이 깨지는 것 방지) | build.gradle, settings.gradle, wrapper |
+| problem2Crawler | 순수 Java (동일) | 동일 |
+| problem3ChatRoom | Spring Boot | `ChatRoomApplication`(@EnableScheduling), 테스트, application.properties |
+| problem4KvStore | Spring Boot | `KvStoreApplication`, 테스트, application.properties |
+
+원래의 `CodingTestApplication`(scanBasePackages="com.example")과 공용 build 파일은 삭제. 지문은 각 문제 README로 옮기고 상위 README는 목차만 남김.
+
 ## 검증
 
 - 변경 후 `devsister|데브시스터|cookie|쿠키|hippo|히포|demo|prac1` 잔존 검색 0건.
