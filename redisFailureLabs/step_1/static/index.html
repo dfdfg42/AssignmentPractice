@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Redis KEYS Graph</title>
+  <style>
+    canvas { border: 1px solid black; display: block; }
+    #duration {
+      margin-top: 10px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 14px;
+      width: fit-content;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="graph" width="800" height="400"></canvas>
+  <div id="duration">Loading...</div>
+
+<script>
+  const canvas = document.getElementById("graph");
+  const ctx = canvas.getContext("2d");
+  const durationBox = document.getElementById("duration");
+
+  function drawPoints(points, duration) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 밀도 조절 비율 계산
+    let densityRatio = 1.0;
+    if (duration > 1500) densityRatio = 0.2;    // 매우 느릴 땐 20%
+    else if (duration > 800) densityRatio = 0.5; // 느릴 땐 50%
+
+    const visibleCount = Math.floor(points.length * densityRatio);
+    const visiblePoints = points.slice(0, visibleCount);
+
+    visiblePoints.forEach(p => {
+      const x = parseFloat(p.x);
+      const y = parseFloat(p.y);
+      if (isNaN(x) || isNaN(y)) return;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = p.color || "black";
+      ctx.fill();
+
+      ctx.font = "12px sans-serif";
+      ctx.fillStyle = "black";
+      ctx.fillText(p.label || "?", x + 6, y - 6);
+    });
+  }
+
+  async function fetchPoints() {
+    const res = await fetch("http://localhost:8000/points");
+    const data = await res.json();
+    const d = data.duration_ms;
+
+    drawPoints(data.points, d);
+
+    // 응답 시간 및 색상 표시
+    durationBox.textContent =
+      `응답 시간: ${d} ms | 전체: ${data.total}개 중 ${data.returned}개 표시`;
+    durationBox.style.backgroundColor =
+      d > 1500 ? "#ff4d4d" :
+      d > 800  ? "#ffd633" :
+      "#ccffcc";
+  }
+
+  setInterval(fetchPoints, 1000);
+</script>
+
+</body>
+</html>
