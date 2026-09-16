@@ -1,0 +1,6 @@
+# 루트용. 각 폴더는 자체 .gitignore 를 가진다.
+.idea/
+*.iml
+.vscode/
+.DS_Store
+.claude/
