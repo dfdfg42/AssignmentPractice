@@ -1,3 +1,5 @@
+> 원본: https://github.com/charsyam/redis_failure_labs (실습용 사본, 67aadca)
+
 # redis_failure_labs
 
 ### PreCondition
