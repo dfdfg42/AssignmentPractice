@@ -70,8 +70,12 @@ reset 을 누르면 상태가 IDLE 로 바뀌고 startTime 과 accumulatedTime �
 
 시간은 elapsedMs 를 1000으로 나눈 값으로 표시합니다.
 
----
+백그라운드에서도 도달한시간에 알람을 정확히 띄우기 위해서
+worker를 사용해서 100ms 마다 메인 스레드에 tick 메시지를 던집니다
+tick 마다 시간 계산과 목표 시간 도달 여부를 확인합니다
 
 
 ---
+
+
 
